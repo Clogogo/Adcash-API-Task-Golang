@@ -2,107 +2,58 @@ package Models
 
 import (
 	database "AdcashTask/Database"
-	"github.com/gofiber/fiber"
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/jinzhu/gorm"
 )
 
 type Product struct {
 	gorm.Model
 	Name  string `json:"product_Name"`
-	CatId int    `gorm:"column:catId"`
-	//CategoryID int `gorm:"column:catId"`
-	//Category Category `gorm:"foreignKey:CatId"`
+	CatId int    `json:"category_Id"`
 }
 
-func GetProducts(c *fiber.Ctx) {
-	db := database.DBConn
-	var product []Product
-	db.Find(&product)
-	_ = c.JSON(product)
-}
+//GetAllProduct Fetch all Product data
+func GetAllProduct(product *[]Product) (err error) {
 
-func GetProduct(c *fiber.Ctx) {
-	id := c.Params("id")
-	db := database.DBConn
-
-	var product Product
-	db.Find(&product, id)
-
-	if product.Name == "" {
-		c.Status(404).Send("No Product Found with ID ")
-		return
+	if err = database.DB.Find(product).Error; err != nil {
+		return err
 	}
-	_ = c.JSON(product)
+	return nil
 
 }
 
-func AddProduct(c *fiber.Ctx) {
-	db := database.DBConn
-	product := new(Product)
+//CreateProduct ... Insert New data
+func CreateProduct(product *Product) (err error) {
 
-	if err := c.BodyParser(product); err != nil {
-		c.Status(503).Send(err)
-		return
+	if err = database.DB.Create(product).Error; err != nil {
+		return err
 	}
+	return nil
+}
 
-	if product.Name == "" {
-		c.Status(422).Send("Invalid entry")
-		return
+//GetProductByID ... Fetch only one user by Id
+func GetProductByID(product *Product, id string) (err error) {
+	if err = database.DB.Where("id = ?", id).First(product).Error; err != nil {
+		return err
 	}
+	return nil
+}
 
-	checker := db.Where(&Product{Name: product.Name, CatId: product.CatId}).First(&product).RecordNotFound()
+//UpdateProduct ... Update Product
+func UpdateProduct(product *Product, id uint) (err error) {
 
-	if !checker {
-		c.Status(409).Send("Product Already Exit with Category")
-		return
-	} else if checker {
-		db.Create(&product)
-		c.Status(200).Send("Category Successfully Added")
-		_ = c.JSON(product)
+	if err = database.DB.Where("id = ?", id).Save(product).Error; err != nil {
+		return err
 	}
+	fmt.Println(product)
+	return nil
 
 }
 
-func UpdateProduct(c *fiber.Ctx) {
-
-	db := database.DBConn
-
-	product := new(Product)
-	//db.Find(&product, id)
-
-	if err := c.BodyParser(product); err != nil {
-		db.Update(product.Name)
-		return
-	}
-
-	checker := db.Where(&Product{Name: product.Name, CatId: product.CatId}).First(&product).RecordNotFound()
-
-	if product.Name == "" {
-		c.Status(404).Send("No Product found with id")
-		return
-	}
-	if !checker {
-		c.Status(409).Send("Product Already Exit with Category")
-		return
-	} else if checker {
-		db.Save(&product)
-		c.Status(200).Send("Product Updated")
-	}
-
-}
-
-func DeleteProduct(c *fiber.Ctx) {
-	id := c.Params("id")
-	db := database.DBConn
-	var product Product
-	db.Find(&product, id)
-
-	if product.Name == "" {
-		c.Status(404).Send("Product Not Found")
-		return
-	}
-
-	db.Delete(&product)
-	c.Send("Product Successfully Deleted")
-
+//DeleteProduct ... Delete Product
+func DeleteProduct(product *Product, id string) (err error) {
+	database.DB.Where("id = ?", id).Delete(product)
+	return nil
 }

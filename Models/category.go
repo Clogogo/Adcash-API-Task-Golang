@@ -1,106 +1,70 @@
 package Models
 
 import (
-	database "AdcashTask/Database"
-	"github.com/gofiber/fiber"
+	"AdcashTask/Database"
+	"fmt"
 	"github.com/jinzhu/gorm"
 )
 
 type Category struct {
 	gorm.Model
-	Name string `validate:"required,string" json:"catName"`
-	Products []Product `gorm:"ForeignKey:CatId"`
+	Name string `json:"catName"`
 }
 
 func (category *Category) TableName() string {
 	return "category"
 }
 
-
-func GetCategories(c *fiber.Ctx) {
-	db := database.DBConn
-	var category []Category
-	db.Find(&category)
-	_ = c.JSON(category)
+//GetAllCategories Fetch all Category data
+func GetAllCategories(category *[]Category) (err error) {
+	if err = database.DB.Find(category).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
-func GetCategory(c *fiber.Ctx) {
-	id := c.Params("id")
-	db := database.DBConn
-	var category Category
-	db.Find(&category, id)
-
-	if category.Name == "" {
-		c.Status(404).Send("Category Not Found")
-		return
-	} else {
-
-		_ = c.JSON(category)
-
+//Get all product of a specific category
+func CategoryProductList(id string) ([]*Product, error) {
+	var products []*Product
+	if err := database.DB.Where("cat_id = ?", id).Find(&products).Error; err != nil {
+		return products, err
 	}
+	return products, nil
 }
 
-func AddCategory(c *fiber.Ctx) {
-	db := database.DBConn
-
-	category := new(Category)
-
-	if err := c.BodyParser(category); err != nil {
-		c.Status(503).Send(err)
-		return
+//GetCategoryByID ... Fetch only one user by Id
+func GetCategoryByID(category *Category, id string) (err error) {
+	if err = database.DB.Where("id = ?", id).First(category).Error; err != nil {
+		return err
 	}
-
-	if category.Name == "" {
-		c.Status(422).Send("Invalid entry")
-		return
-	}
-
-	checker := db.Find(&category, "name = ?", category.Name).RecordNotFound()
-
-	if !checker {
-		c.Status(409).Send("Category Already Exit")
-		return
-	} else if checker {
-		db.Create(&category)
-		_ = c.JSON(category)
-		return
-	} else {
-		c.Status(400)
-	}
-
+	return nil
 }
 
-func DeleteCategories(c *fiber.Ctx) {
-	id := c.Params("id")
-	db := database.DBConn
-	var category Category
-	db.Find(&category, id)
+//CreateCategory ... Insert New data
+func CreateCategory(category *Category) (err error) {
 
-	if category.Name == "" {
-		c.Status(404).Send("No Category Found with given ID")
-		return
+	if err = database.DB.Create(category).Error; err != nil {
+		return err
 	}
-
-	db.Delete(&category)
-	c.Send("Category Successfully Deleted")
-
+	return nil
 }
 
-func UpdateCategories(c *fiber.Ctx) {
-	id := c.Params("id")
-	db := database.DBConn
+//UpdateCategory ... Update category
+func UpdateCategory(category *Category, id uint) (err error) {
 
-	category := new(Category)
-	db.Find(&category, id)
-	if category.Name == "" {
-		c.Status(404).Send("No Category found with id")
-		return
+	if err = database.DB.Where("id = ?", id).Save(category).Error; err != nil {
+		return err
 	}
-	if err := c.BodyParser(category); err != nil {
-		db.Update(category.Name)
-		return
+	fmt.Println(category)
+	return nil
+}
+
+//DeleteCategory ... Delete Category
+func DeleteCategory(category *Category, id int64) (err error) {
+
+	if err = database.DB.Where("id = ?", id).Delete(category).Error; err != nil {
+		return err
 	}
-	db.Save(&category)
-	c.Status(200).Send("Category Updated")
+	return nil
 
 }

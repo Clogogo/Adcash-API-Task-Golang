@@ -1,27 +1,27 @@
 package Routes
-import (
 
-	"AdcashTask/Models"
+import (
+	"AdcashTask/Controllers"
 	"github.com/gin-gonic/gin"
 )
+
 //SetupRouter ... Configure routes
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	app := r.Group("/api/v1")
 
-
-
-	app.GET("Category", Models.GetCategories)
-	app.GET("Category/:id", Models.GetCategory)
-	app.POST("Category", Models.AddCategory)
-	app.DELETE("Category/:id", Models.DeleteCategories)
-	app.PUT("Category/:id", Models.UpdateCategories)
+	app.GET("category", Controllers.GetCategories)
+	app.GET("category/:id", Controllers.GetCategoryByID)
+	app.GET("category/:id/products", Controllers.GetCategoryProductByID)
+	app.POST("category", Controllers.CreateCategory)
+	app.DELETE("category/:id", Controllers.DeleteCategory)
+	app.PUT("category", Controllers.UpdateCategory)
 
 	//product routes
-	app.GET("Products", Models.GetProducts)
-	app.GET("Product/:id", Models.GetProduct)
-	app.POST("Product", Models.AddProduct)
-	app.DELETE("Product/:id", Models.DeleteProduct)
-	app.PUT("Product/:id", Models.UpdateProduct)
+	app.GET("products", Controllers.GetProducts)
+	app.GET("product/:id", Controllers.GetProductByID)
+	app.POST("product", Controllers.CreateProduct)
+	app.DELETE("product/:id", Controllers.DeleteProduct)
+	app.PUT("product", Controllers.UpdateProduct)
 	return r
 }
