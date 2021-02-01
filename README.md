@@ -3,7 +3,7 @@ A simple category and product class
 #### Technology
 
   ```
-$ Golang
+$ Go
 ```
 #### Project Setup
 
